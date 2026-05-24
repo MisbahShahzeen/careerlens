@@ -47,8 +47,12 @@ export const analysisAPI = {
 
   getHistory: () => API.get("/analysis/history"),
 
+  getAnalysis: (analysisId: number) =>
+    API.get(`/analysis/${analysisId}`),
+
   getCoverLetter: (analysisId: number) =>
     API.post(`/analysis/cover-letter/${analysisId}`),
+  
 };
 
 export default API;

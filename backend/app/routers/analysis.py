@@ -106,3 +106,30 @@ def get_history(
         }
         for a in analyses
     ]
+
+@router.get("/{analysis_id}")
+def get_analysis(
+    analysis_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    record = db.query(Analysis).filter(
+        Analysis.id == analysis_id,
+        Analysis.user_id == user_id
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    return {
+        "analysis_id": record.id,
+        "resume_filename": record.resume_filename,
+        "job_description": record.job_description,
+        "match_score": record.match_score,
+        "matched_keywords": json.loads(record.matched_keywords or "[]"),
+        "missing_keywords": json.loads(record.missing_keywords or "[]"),
+        "strengths": json.loads(record.strengths or "[]"),
+        "improvements": json.loads(record.improvements or "[]"),
+        "cover_letter": record.cover_letter,
+        "created_at": record.created_at,
+    }

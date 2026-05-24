@@ -82,31 +82,29 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-3">
             {history.map(item => (
-              <div key={item.id}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-5
-                           flex items-center justify-between hover:border-gray-700
-                           transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="text-2xl">📄</div>
-                  <div>
-                    <p className="text-white text-sm font-medium">
-                      {item.resume_filename}
-                    </p>
-                    <p className="text-gray-600 text-xs mt-0.5">
-                      {formatDate(item.created_at)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className={`text-2xl font-bold ${scoreColor(item.match_score)}`}>
-                      {item.match_score}
-                    </div>
-                    <div className="text-gray-600 text-xs">match score</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+  <Link key={item.id} href={`/analysis/${item.id}`}
+    className="bg-gray-900 border border-gray-800 rounded-xl p-5
+              flex items-center justify-between hover:border-gray-700
+              transition-colors cursor-pointer">
+    <div className="flex items-center gap-4">
+      <div className="text-2xl">📄</div>
+      <div>
+        <p className="text-white text-sm font-medium">
+          {item.resume_filename}
+        </p>
+        <p className="text-gray-600 text-xs mt-0.5">
+          {formatDate(item.created_at)}
+        </p>
+      </div>
+    </div>
+    <div className="text-right">
+      <div className={`text-2xl font-bold ${scoreColor(item.match_score)}`}>
+        {item.match_score}
+      </div>
+      <div className="text-gray-600 text-xs">match score</div>
+    </div>
+  </Link>
+))}
           </div>
         )}
       </div>
