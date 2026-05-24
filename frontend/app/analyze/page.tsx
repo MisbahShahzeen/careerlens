@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { analysisAPI, authAPI } from '@/lib/api';
+import Link from 'next/link';
 
 interface AnalysisResult {
   analysis_id: number;
@@ -73,18 +74,23 @@ export default function AnalyzePage() {
   return (
     <div className="min-h-screen bg-gray-950 p-6">
       <div className="max-w-4xl mx-auto">
-
-        <div className="flex justify-between items-center mb-8">
-          <div>
+    <div className="flex justify-between items-center mb-8">
+        <div>
             <h1 className="text-2xl font-bold text-white">Resume Analyzer</h1>
             <p className="text-gray-500 text-sm mt-1">Upload your resume and paste a job description</p>
-          </div>
-          <button
+    </div>
+    <div className="flex gap-3 items-center">
+        <Link href="/dashboard"
+        className="text-gray-400 hover:text-white text-sm transition-colors">
+        Dashboard
+        </Link>
+        <button
             onClick={() => { authAPI.logout(); router.push('/login'); }}
             className="text-gray-600 hover:text-gray-400 text-sm transition-colors">
             Sign out
-          </button>
-        </div>
+        </button>
+    </div>
+    </div>
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div

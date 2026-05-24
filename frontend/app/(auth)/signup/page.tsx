@@ -18,7 +18,7 @@ export default function SignupPage() {
     try {
       await authAPI.register(email, password);
       await authAPI.login(email, password);
-      router.push('/analyze');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Signup failed');
     } finally {

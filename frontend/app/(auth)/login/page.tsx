@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('');
     try {
       await authAPI.login(email, password);
-      router.push('/analyze');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed');
     } finally {
