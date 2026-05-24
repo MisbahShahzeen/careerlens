@@ -45,3 +45,38 @@ def test_login_with_wrong_password_fails():
 def test_analyze_endpoint_requires_auth():
     response = client.post("/analysis/analyze")
     assert response.status_code == 401
+
+def test_get_analysis_requires_auth():
+    response = client.get("/analysis/1")
+    assert response.status_code == 401
+
+def test_get_nonexistent_analysis_returns_404():
+    email = random_email()
+    client.post("/auth/register", json={"email": email, "password": "testpass123"})
+    login_res = client.post("/auth/login", data={
+        "username": email,
+        "password": "testpass123"
+    })
+    token = login_res.json()["access_token"]
+
+    response = client.get(
+        "/analysis/999999",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 404
+
+def test_history_endpoint_returns_list():
+    email = random_email()
+    client.post("/auth/register", json={"email": email, "password": "testpass123"})
+    login_res = client.post("/auth/login", data={
+        "username": email,
+        "password": "testpass123"
+    })
+    token = login_res.json()["access_token"]
+
+    response = client.get(
+        "/analysis/history",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
