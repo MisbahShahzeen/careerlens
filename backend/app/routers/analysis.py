@@ -110,6 +110,90 @@ async def analyze_rag(
 
     return {**result, "analysis_id": record.id}
 
+@router.post("/compare")
+async def compare_approaches(
+    resume: UploadFile = File(...),
+    job_description: str = Form(...),
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Run BOTH the legacy prompt-stuffing approach and the new RAG approach
+    on the same resume + JD, and return them side by side for comparison.
+    This is the evaluation endpoint that demonstrates RAG's improvements.
+    """
+    if not resume.filename.lower().endswith((".pdf", ".docx")):
+        raise HTTPException(status_code=400, detail="Only PDF and DOCX files allowed")
+
+    file_bytes = await resume.read()
+
+    try:
+        resume_text = extract_resume_text(resume.filename, file_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read file: {str(e)}")
+
+    if not resume_text.strip():
+        raise HTTPException(status_code=400, detail="Could not extract text from file")
+
+    # --- Approach 1: Legacy prompt stuffing ---
+    try:
+        legacy_result = analyze_resume(resume_text, job_description)
+    except Exception as e:
+        legacy_result = {"error": f"Legacy analysis failed: {str(e)}"}
+
+    # --- Approach 2: RAG ---
+    # Create a temporary analysis record to hold the RAG chunks/requirements
+    rag_analysis = Analysis(
+        user_id=user_id,
+        resume_filename=resume.filename,
+        resume_text=resume_text,
+        job_description=job_description,
+        rag_enabled=True,
+    )
+    db.add(rag_analysis)
+    db.commit()
+    db.refresh(rag_analysis)
+
+    try:
+        store_resume_chunks(db, rag_analysis.id, resume_text)
+        store_jd_requirements(db, rag_analysis.id, job_description)
+        rag_result = analyze_resume_rag(db, rag_analysis.id)
+        rag_result["analysis_id"] = rag_analysis.id
+    except Exception as e:
+        rag_result = {"error": f"RAG analysis failed: {str(e)}"}
+
+    # --- Build a comparison summary ---
+    comparison = {
+        "legacy": {
+            "approach": "prompt_stuffing",
+            "match_score": legacy_result.get("match_score"),
+            "matched_keywords": legacy_result.get("matched_keywords", []),
+            "missing_keywords": legacy_result.get("missing_keywords", []),
+            "has_evidence": False,
+            "explainable": False,
+            "result": legacy_result,
+        },
+        "rag": {
+            "approach": "retrieval_augmented",
+            "match_score": rag_result.get("match_score"),
+            "requirements_analyzed": len(rag_result.get("requirement_scores", [])),
+            "has_evidence": True,
+            "explainable": True,
+            "result": rag_result,
+        },
+        "differences": {
+            "score_delta": (
+                (rag_result.get("match_score", 0) or 0)
+                - (legacy_result.get("match_score", 0) or 0)
+            ),
+            "rag_provides_evidence": True,
+            "rag_scores_per_requirement": True,
+            "legacy_truncates_input": len(resume_text) > 4000,
+            "resume_length_chars": len(resume_text),
+        },
+    }
+
+    return comparison
 
 @router.get("/{analysis_id}/evidence")
 def get_evidence(

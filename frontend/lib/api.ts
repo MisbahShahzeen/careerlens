@@ -52,6 +52,23 @@ export const analysisAPI = {
 
   getCoverLetter: (analysisId: number) =>
     API.post(`/analysis/cover-letter/${analysisId}`),
+
+  analyzeRag: (resumeFile: File, jobDescription: string) => {
+    const form = new FormData();
+    form.append("resume", resumeFile);
+    form.append("job_description", jobDescription);
+    return API.post("/analysis/analyze-rag", form);
+  },
+
+  getEvidence: (analysisId: number) =>
+    API.get(`/analysis/${analysisId}/evidence`),
+
+  compareApproaches: (resumeFile: File, jobDescription: string) => {
+    const form = new FormData();
+    form.append("resume", resumeFile);
+    form.append("job_description", jobDescription);
+    return API.post("/analysis/compare", form);
+  },
   
 };
 

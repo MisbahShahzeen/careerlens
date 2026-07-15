@@ -74,23 +74,28 @@ export default function AnalyzePage() {
   return (
     <div className="min-h-screen bg-gray-950 p-6">
       <div className="max-w-4xl mx-auto">
-    <div className="flex justify-between items-center mb-8">
-        <div>
+
+        <div className="flex justify-between items-center mb-8">
+          <div>
             <h1 className="text-2xl font-bold text-white">Resume Analyzer</h1>
             <p className="text-gray-500 text-sm mt-1">Upload your resume and paste a job description</p>
-    </div>
-    <div className="flex gap-3 items-center">
-        <Link href="/dashboard"
-        className="text-gray-400 hover:text-white text-sm transition-colors">
-        Dashboard
-        </Link>
-        <button
-            onClick={() => { authAPI.logout(); router.push('/login'); }}
-            className="text-gray-600 hover:text-gray-400 text-sm transition-colors">
-            Sign out
-        </button>
-    </div>
-    </div>
+          </div>
+          <div className="flex gap-3 items-center">
+            <Link href="/analyze-rag"
+              className="text-violet-400 hover:text-violet-300 text-sm transition-colors">
+              Explainable (RAG)
+            </Link>
+            <Link href="/dashboard"
+              className="text-gray-400 hover:text-white text-sm transition-colors">
+              Dashboard
+            </Link>
+            <button
+              onClick={() => { authAPI.logout(); router.push('/login'); }}
+              className="text-gray-600 hover:text-gray-400 text-sm transition-colors">
+              Sign out
+            </button>
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div
@@ -138,16 +143,14 @@ export default function AnalyzePage() {
         </button>
 
         {error && (
-          <div className="text-red-400 text-sm bg-red-950 border border-red-900
-                          rounded-xl p-4 mb-4">
+          <div className="text-red-400 text-sm bg-red-950 border border-red-900 rounded-xl p-4 mb-4">
             {error}
           </div>
         )}
 
         {result && (
           <div className="space-y-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6
-                            flex flex-col md:flex-row gap-6 items-start">
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start">
               <div className="flex flex-col items-center">
                 <div className={`text-5xl font-bold ${scoreColor(result.match_score)}`}>
                   {result.match_score}
