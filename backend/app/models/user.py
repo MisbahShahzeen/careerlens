@@ -44,6 +44,7 @@ class Analysis(Base):
     improvements = Column(Text)
     cover_letter = Column(Text)
     rag_enabled = Column(Boolean, default=False)
+    mongo_document_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     owner = relationship("User", back_populates="analyses")
     resume = relationship("Resume", back_populates="analyses")
