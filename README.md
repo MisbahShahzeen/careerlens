@@ -21,6 +21,65 @@ CareerLens helps job seekers tailor their resume for specific roles. Upload a PD
 
 Every analysis is saved per user, so candidates can build a history of how their resume scores against different roles.
 
+## Explainable Matching with RAG
+
+CareerLens includes a Retrieval-Augmented Generation (RAG) pipeline that makes job-description matching **explainable** rather than a black-box score.
+
+**The problem with naive prompt stuffing:** The standard approach sends the entire resume and job description to the LLM in one prompt and asks for a score. This truncates long resumes (cutting off content past a character limit), gives no evidence for why a score was assigned, and does surface-level keyword matching.
+
+**The RAG approach:** Instead of one big prompt, CareerLens:
+
+1. **Chunks** the resume into semantic sections (summary, experience, skills, education) and the job description into individual requirements.
+2. **Embeds** each chunk into a 768-dimensional vector using Gemini's `gemini-embedding-001` model.
+3. **Stores** the embeddings in PostgreSQL using the `pgvector` extension.
+4. **Retrieves** the most relevant resume sections for each requirement via cosine similarity search.
+5. **Scores** each requirement individually, sending the LLM only the relevant evidence.
+6. **Explains** every score with the specific resume chunk that supports it and a similarity percentage.
+
+The result: each job requirement gets its own score, backed by a cited resume section and a strong/weak evidence flag. When a requirement has no supporting evidence (e.g. a skill the candidate lacks), the system honestly flags it as weak rather than hallucinating a match.
+
+### RAG Architecture
+
+```
+Resume text                          Job description
+     │                                     │
+     ▼                                     ▼
+Section chunking                    Requirement chunking
+     │                                     │
+     ▼                                     ▼
+Gemini embeddings (768-dim)         Gemini embeddings (768-dim)
+     │                                     │
+     ▼                                     ▼
+Store in pgvector          For each requirement:
+                              cosine similarity search
+                                     │
+                                     ▼
+                           Top-K matching chunks
+                                     │
+                                     ▼
+                           LLM scores requirement
+                           with cited evidence
+                                     │
+                                     ▼
+                           Aggregate + explanation trail
+```
+
+### RAG Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/analysis/analyze-rag` | Full RAG pipeline: chunk, embed, retrieve, score |
+| GET | `/analysis/{id}/evidence` | Retrieve the evidence trail for a past analysis |
+| POST | `/analysis/compare` | Run both prompt-stuffing and RAG side by side |
+
+### Key Design Decisions
+
+- **pgvector over a dedicated vector DB** (Pinecone, Weaviate): the app already runs PostgreSQL, so pgvector adds semantic search with zero extra infrastructure.
+- **768 dimensions via Matryoshka truncation**: `gemini-embedding-001` returns 3072 dimensions by default; truncating to 768 balances storage cost against retrieval quality with minimal loss.
+- **Cosine similarity threshold of 0.65**: validated empirically — semantically equivalent phrasings ("built REST APIs" vs "developed RESTful services") score ~0.86, while unrelated text scores ~0.49, so 0.65 cleanly separates strong from weak evidence.
+- **Retry with exponential backoff**: RAG makes one LLM call per requirement, so transient 503s are handled with retries rather than failing the whole analysis.
+
+
 ## Screenshots
 
 | | |
