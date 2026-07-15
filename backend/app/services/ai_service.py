@@ -4,6 +4,7 @@ import json
 import re
 from app.services.rag_service import build_evidence_map
 from sqlalchemy.orm import Session
+import time
 
 
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
@@ -104,10 +105,24 @@ Return ONLY valid JSON:
     "explanation": "<one sentence explaining the score, referencing the evidence>"
 }}
 """
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-    )
+    response = None
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+            )
+            break
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(2 ** attempt)  # 1s, then 2s backoff
+                continue
+            # Final attempt failed — return a graceful fallback
+            return {
+                "score": 0,
+                "explanation": "Scoring temporarily unavailable — please retry.",
+                "evidence": matched_chunks[0]["chunk_text"] if matched_chunks else None,
+            }
     content = response.text
     match = re.search(r'\{.*\}', content, re.DOTALL)
     parsed = json.loads(match.group()) if match else {"score": 0, "explanation": "Could not parse."}
@@ -121,10 +136,11 @@ Return ONLY valid JSON:
 
 def analyze_resume_rag(db: Session, analysis_id: int) -> dict:
     """
-    RAG-based analysis. Assumes chunks and requirements are already
-    stored and embedded. Retrieves evidence per requirement, scores
-    each one, and aggregates into a final analysis.
+    RAG-based analysis. Retrieves evidence per requirement, scores
+    each one, persists the matches, and aggregates into a final analysis.
     """
+    from app.models.user import JDRequirement, RequirementMatch
+
     evidence_map = build_evidence_map(db, analysis_id)
 
     if not evidence_map:
@@ -141,6 +157,19 @@ def analyze_resume_rag(db: Session, analysis_id: int) -> dict:
 
     for item in evidence_map:
         result = score_requirement(item["requirement_text"], item["matched_chunks"])
+
+        # Persist each chunk match for this requirement
+        for chunk in item["matched_chunks"]:
+            match_record = RequirementMatch(
+                analysis_id=analysis_id,
+                requirement_id=item["requirement_id"],
+                chunk_id=chunk["chunk_id"],
+                similarity_score=chunk["similarity"],
+                requirement_score=result["score"],
+                explanation=result["explanation"],
+            )
+            db.add(match_record)
+
         requirement_scores.append({
             "requirement": item["requirement_text"],
             "score": result["score"],
@@ -151,10 +180,9 @@ def analyze_resume_rag(db: Session, analysis_id: int) -> dict:
         })
         total += result["score"]
 
-    # Overall match score = average of all requirement scores
-    match_score = round(total / len(requirement_scores))
+    db.commit()
 
-    # Derive matched/missing keywords from scores
+    match_score = round(total / len(requirement_scores))
     matched = [r["requirement"] for r in requirement_scores if r["score"] >= 60]
     missing = [r["requirement"] for r in requirement_scores if r["score"] < 40]
 
