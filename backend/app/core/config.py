@@ -10,5 +10,6 @@ class Settings:
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
+    AI_WORKER_URL: str = os.getenv("AI_WORKER_URL", "http://localhost:8001")
 
 settings = Settings()

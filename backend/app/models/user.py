@@ -96,3 +96,14 @@ class RequirementMatch(Base):
     analysis = relationship("Analysis", back_populates="requirement_matches")
     requirement = relationship("JDRequirement", back_populates="matches")
     chunk = relationship("ResumeChunk", back_populates="matches")
+
+class AnalysisJob(Base):
+    __tablename__ = "analysis_jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    analysis_id = Column(Integer, ForeignKey("analyses.id"), nullable=True)
+    status = Column(String, default="pending")  # pending, processing, complete, failed
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
