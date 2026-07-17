@@ -60,6 +60,9 @@ export const analysisAPI = {
     return API.post("/analysis/analyze-rag", form);
   },
 
+  getJobStatus: (jobId: number) =>
+    API.get(`/analysis/jobs/${jobId}`),
+
   getEvidence: (analysisId: number) =>
     API.get(`/analysis/${analysisId}/evidence`),
 

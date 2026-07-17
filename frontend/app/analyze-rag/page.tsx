@@ -166,8 +166,8 @@ export default function AnalyzeRagPage() {
                 Requirement-by-requirement breakdown
               </h3>
               <div className="space-y-3">
-                {result.requirement_scores.map((req, i) => (
-                  <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                  {(result.requirement_scores || []).map((req, i) => (
+                    <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                     <div className="flex justify-between items-start gap-4 mb-3">
                       <p className="text-gray-200 text-sm font-medium flex-1">
                         {req.requirement}

@@ -175,7 +175,7 @@ export default function AnalyzePage() {
                   Matched keywords
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {result.matched_keywords.map(k => (
+                  {(result.matched_keywords || []).map(k => (
                     <span key={k} className="bg-green-950 text-green-300 text-xs
                                              px-2.5 py-1 rounded-full border border-green-900">
                       {k}
@@ -189,7 +189,7 @@ export default function AnalyzePage() {
                   Missing keywords
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {result.missing_keywords.map(k => (
+                  {(result.missing_keywords || []).map(k => (
                     <span key={k} className="bg-red-950 text-red-300 text-xs
                                              px-2.5 py-1 rounded-full border border-red-900">
                       {k}
@@ -204,7 +204,7 @@ export default function AnalyzePage() {
                 How to improve
               </h3>
               <ul className="space-y-2">
-                {result.improvements.map((imp, i) => (
+                {(result.improvements || []).map((imp, i) => (
                   <li key={i} className="flex gap-2 text-gray-300 text-sm">
                     <span className="text-sky-600 mt-0.5 shrink-0">→</span>
                     {imp}
