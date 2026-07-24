@@ -10,6 +10,7 @@ from app.services.document_store import store_resume_document, get_resume_docume
 from app.services.chunker import chunk_resume
 from app.models.user import Analysis, ResumeChunk, JDRequirement, RequirementMatch, AnalysisJob
 from fastapi.security import OAuth2PasswordBearer
+from app.core.rate_limit import check_rate_limit
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -29,6 +30,8 @@ async def analyze(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
+    check_rate_limit(user_id)
+
     if not resume.filename.lower().endswith((".pdf", ".docx")):
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files allowed")
 
@@ -104,6 +107,9 @@ async def analyze_rag(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
+    
+    check_rate_limit(user_id)
+
     if not resume.filename.lower().endswith((".pdf", ".docx")):
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files allowed")
 
@@ -218,9 +224,10 @@ async def compare_approaches(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
+    check_rate_limit(user_id)
+
     if not resume.filename.lower().endswith((".pdf", ".docx")):
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files allowed")
-
     file_bytes = await resume.read()
 
     try:
