@@ -17,3 +17,6 @@ Thumbs.db
 *.env
 .env.local
 .env.production
+
+# Kubernetes secrets
+k8s/secrets.yaml
