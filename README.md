@@ -2,8 +2,7 @@
 
 > AI-powered resume analyzer. Upload your resume and a job description — get a match score, keyword gap analysis, and a personalized cover letter in seconds.
 
-**Live demo:** [careerlens-one.vercel.app](https://careerlens-one.vercel.app)
-**API docs:** [valiant-transformation-production-32e3.up.railway.app/docs](https://valiant-transformation-production-32e3.up.railway.app/docs)
+**Live frontend:** [careerlens-one.vercel.app](https://careerlens-one.vercel.app). The hosted backend is currently paused, so run the full stack locally using the steps in Running locally below.
 
 ![Tests](https://github.com/MisbahShahzeen/careerlens/actions/workflows/test.yml/badge.svg)
 
@@ -95,7 +94,7 @@ Store in pgvector          For each requirement:
 
 | Layer | Tech |
 |-------|------|
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS |
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS |
 | Backend | FastAPI, SQLAlchemy 2.0, Alembic |
 | Database | PostgreSQL 15 |
 | AI | Google Gemini API (`gemini-2.5-flash`) |
@@ -183,7 +182,7 @@ cd backend
 pytest tests/ -v
 ```
 
-10 tests cover auth (register, login, duplicate emails, wrong passwords, protected routes) and analysis endpoints (auth required, 404 handling, history). Tests run automatically on every push via GitHub Actions.
+25 tests cover auth (register, login, duplicate emails, wrong passwords), the analysis, RAG, evidence, comparison and job-status endpoints (auth required, 404 handling, history), resume and job description chunking, per-user rate limiting, and the health checks. Tests run automatically on every push via GitHub Actions.
 
 ## Project structure
 
